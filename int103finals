@@ -1,0 +1,183 @@
+1. Custom Exception Class (Checked and Unchecked)
+Custom Exception Class คือการสร้างคลาสยกเว้น (exception) ใหม่ที่สืบทอดจาก Exception หรือ RuntimeException เพื่อใช้สำหรับการจัดการสถานการณ์ที่เฉพาะเจาะจงในโปรแกรมของเรา
+
+Checked Exception: ต้องได้รับการจัดการ (handle) หรือประกาศ (declare) ในเมธอด โดยต้องสืบทอดจาก Exception
+Unchecked Exception: ไม่จำเป็นต้องจัดการหรือประกาศ แต่สามารถโยน (throw) ได้ตามต้องการ โดยต้องสืบทอดจาก RuntimeException 
+
+// Checked Exception
+class MyCheckedException extends Exception {
+    public MyCheckedException(String message) {
+        super(message);
+    }
+}
+
+// Unchecked Exception
+class MyUncheckedException extends RuntimeException {
+    public MyUncheckedException(String message) {
+        super(message);
+    }
+}
+
+---------------------------
+2. try-catch-finally Block
+try-catch-finally Block คือการจัดการข้อยกเว้น (exception handling) ใน Java
+
+try block: ใส่โค้ดที่คาดว่าอาจจะเกิดข้อยกเว้น
+catch block: ใส่โค้ดที่ใช้จัดการข้อยกเว้นที่เกิดขึ้น
+finally block: ใส่โค้ดที่ต้องการให้ทำงานไม่ว่าจะเกิดข้อยกเว้นหรือไม่
+
+public class ExceptionExample {
+    public static void main(String[] args) {
+        try {
+            throw new MyCheckedException("This is a checked exception");
+        } catch (MyCheckedException e) {
+            System.out.println("Caught checked exception: " + e.getMessage());
+        } finally {
+            System.out.println("This is the finally block");
+        }
+
+        try {
+            throw new MyUncheckedException("This is an unchecked exception");
+        } catch (MyUncheckedException e) {
+            System.out.println("Caught unchecked exception: " + e.getMessage());
+        } finally {
+            System.out.println("This is the finally block");
+        }
+    }
+}
+
+-----------------------------------
+3. try-with-resources Block
+try-with-resources Block คือการใช้ try เพื่อเปิด resource (เช่นไฟล์) และทำการปิด resource โดยอัตโนมัติเมื่อสิ้นสุดการทำงานของบล็อก ไม่ว่าจะเกิดข้อยกเว้นหรือไม่
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class TryWithResourcesExample {
+    public static void main(String[] args) {
+        try (BufferedReader br = new BufferedReader(new FileReader("example.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            System.out.println("IOException occurred: " + e.getMessage());
+        }
+    }
+}
+
+-----------------------------------
+
+4. IO (InputStream, OutputStream, Reader, Writer)
+IO (Input/Output) คือการอ่านข้อมูลจากแหล่งข้อมูล (input) และการเขียนข้อมูลไปยังปลายทาง (output)
+
+InputStream: ใช้อ่านข้อมูลเป็น byte
+OutputStream: ใช้เขียนข้อมูลเป็น byte
+Reader: ใช้อ่านข้อมูลเป็น character
+Writer: ใช้เขียนข้อมูลเป็น character
+
+import java.io.*;
+
+public class IOExample {
+    public static void main(String[] args) {
+        // File IO
+        try (FileInputStream fis = new FileInputStream("input.txt");
+             FileOutputStream fos = new FileOutputStream("output.txt")) {
+            int data;
+            while ((data = fis.read()) != -1) {
+                fos.write(data);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Buffered IO
+        try (BufferedReader br = new BufferedReader(new FileReader("input.txt"));
+             BufferedWriter bw = new BufferedWriter(new FileWriter("output.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                bw.write(line);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Object IO
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("object.dat"));
+             ObjectInputStream ois = new ObjectInputStream(new FileInputStream("object.dat"))) {
+            oos.writeObject("Hello, World!");
+            String message = (String) ois.readObject();
+            System.out.println(message);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+---------------------------------
+
+5. Serializable
+Serializable เป็นอินเตอร์เฟซที่ใช้เพื่อระบุว่าคลาสสามารถถูกแปลงเป็นสตรีมของไบต์ได้ ทำให้สามารถบันทึกหรือส่งผ่านข้อมูลระหว่างกระบวนการหรือเครื่องต่าง ๆ ได
+
+import java.io.Serializable;
+
+class Person implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private String name;
+    private int age;
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{name='" + name + "', age=" + age + '}';
+    }
+}
+
+-*-
+
+public class SerializableExample {
+    public static void main(String[] args) {
+        Person person = new Person("John Doe", 30);
+
+        // Serialize
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("person.dat"))) {
+            oos.writeObject(person);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Deserialize
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("person.dat"))) {
+            Person deserializedPerson = (Person) ois.readObject();
+            System.out.println(deserializedPerson);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+---------------------------------
+
+6. Scanner
+Scanner เป็นคลาสที่ใช้เพื่ออ่านข้อมูลจากอินพุตต่าง ๆ เช่น คอนโซลหรือไฟล์ โดยสามารถอ่านข้อมูลในรูปแบบต่าง ๆ เช่น สตริง, ตัวเลข, และอื่น ๆ
+
+
+import java.util.Scanner;
+
+public class ScannerExample {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter your name: ");
+        String name = scanner.nextLine();
+        System.out.println("Enter your age: ");
+        int age = scanner.nextInt();
+        System.out.println("Hello, " + name + ". You are " + age + " years old.");
+        scanner.close();
+    }
+}
